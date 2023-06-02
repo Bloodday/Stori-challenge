@@ -1,11 +1,18 @@
+import os
 import csv
 import datetime
-from sqlalchemy import create_engine, exists
+from sqlalchemy import create_engine, exists, func
 from sqlalchemy_utils import database_exists, create_database 
 from sqlalchemy.orm import sessionmaker
 from DatabaseModels.AccountTransaction import AccountTransaction
 from DatabaseModels.AccountsBalance import AccountBalance
+from Services.EmailService import SendEmail
 
+DB_USER = os.environ['DB_USER']
+DB_PASSWORD = os.environ['DB_PASSWORD']
+DB_HOST = os.environ['DB_HOST']
+DB_PORT = os.environ['DB_PORT']
+DB_NAME = os.environ['DB_NAME']
 
 # Configurar la conexión a la base de datos PostgreSQL
 def get_engine(user, passwd, host, port, db):
@@ -16,7 +23,7 @@ def get_engine(user, passwd, host, port, db):
     return engine
 
 def lambda_handler(event, context):
-    engine = get_engine("postgres","your_password","localhost","5432","Accounts")
+    engine = get_engine(DB_USER,DB_PASSWORD,"localhost","5432","Accounts")
     AccountTransaction.metadata.create_all(engine)
     AccountBalance.metadata.create_all(engine)
     Session = sessionmaker(bind=engine)
@@ -49,7 +56,7 @@ def lambda_handler(event, context):
     for transaction in transactions_applied:
         transaction.isApplied = True
 
-    # Store the modify the total balance of the account
+    # Store the updated total balance of the account
     account_total = session.query(AccountBalance).first()
     if account_total:
         account_total.total = round(account_total.total + transactions_total, 2)
@@ -58,6 +65,24 @@ def lambda_handler(event, context):
         session.add(account_total)
 
     session.commit() 
+
+    result = session.query(
+        func.extract('year', AccountTransaction.date).label('year'),
+        func.extract('month', AccountTransaction.date).label('month'),
+        func.count().label('transaction_count')
+    ).group_by('year', 'month').order_by('year', 'month').all()
+
+    # Print the results
+    for row in result:
+        year = row.year
+        month = row.month
+        transaction_count = row.transaction_count
+        print(f"{year}/{month}: {transaction_count} transactions")
+
+    # Close the session
+    session.close()
+
+    SendEmail()
 
     return "Hello!"    
 
