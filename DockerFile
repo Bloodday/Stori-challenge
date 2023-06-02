@@ -16,6 +16,9 @@ ENV AWS_ACCESS_KEY_ID=value1 \
     DB_PORT=value2 \
     DB_NAME=value2 
 
+# upgrade pip
+RUN  pip install --upgrade pip
+
 # Copy the requirements file and install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt

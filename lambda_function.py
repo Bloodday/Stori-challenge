@@ -23,7 +23,7 @@ def get_engine(user, passwd, host, port, db):
     return engine
 
 def lambda_handler(event, context):
-    engine = get_engine(DB_USER,DB_PASSWORD,"localhost","5432","Accounts")
+    engine = get_engine(DB_USER,DB_PASSWORD,DB_HOST,DB_PORT,DB_NAME)
     AccountTransaction.metadata.create_all(engine)
     AccountBalance.metadata.create_all(engine)
     Session = sessionmaker(bind=engine)
@@ -61,29 +61,56 @@ def lambda_handler(event, context):
     if account_total:
         account_total.total = round(account_total.total + transactions_total, 2)
     else:
-        account_total = AccountBalance(total=transactions_total)
+        account_total = round(account_total.total + transactions_total, 2)
         session.add(account_total)
 
-    session.commit() 
+    session.commit()
 
-    result = session.query(
+    total_balance = account_total.total
+
+    transaction_count_per_month = session.query(
         func.extract('year', AccountTransaction.date).label('year'),
         func.extract('month', AccountTransaction.date).label('month'),
         func.count().label('transaction_count')
     ).group_by('year', 'month').order_by('year', 'month').all()
 
-    # Print the results
-    for row in result:
-        year = row.year
-        month = row.month
-        transaction_count = row.transaction_count
-        print(f"{year}/{month}: {transaction_count} transactions")
+    average_debit = round(session.query(func.avg(AccountTransaction.amount)).filter(AccountTransaction.amount < 0).scalar(),2)
+    average_credit = round(session.query(func.avg(AccountTransaction.amount)).filter(AccountTransaction.amount > 0).scalar(),2)
 
     # Close the session
     session.close()
+    
+    engine.dispose()
 
-    SendEmail()
+    account_summary = construct_message(transaction_count_per_month, total_balance, average_debit, average_credit) 
+    print(account_summary)
+    SendEmail(account_summary)
 
-    return "Hello!"    
+    return
+
+def construct_message(transaction_count_per_month, total_balance, average_debit, average_credit):
+    result = ""
+
+    total_balance_message = f"Total balance is {total_balance}"
+    
+    transactions_per_month_messages = []
+    # Print the results
+    for row in transaction_count_per_month:
+        year = row.year
+        month = row.month
+        transaction_count = row.transaction_count
+        transactions_per_month_messages.append(f"Number of transactions in {year}/{month}: {transaction_count}")
+
+    average_debit_message = f"Average debit amount: {average_debit}" 
+    average_credit_message = f"Average debit amount: {average_credit}" 
+
+    result += total_balance_message + "\n"
+
+    for montly_transactions_message in transactions_per_month_messages:
+        result += montly_transactions_message + "\n"
+
+    result += average_debit_message + "\n"
+    result += average_credit_message + "\n"
+    return result
 
 lambda_handler(None, None)
