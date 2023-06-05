@@ -16,29 +16,33 @@ This repository contains the progress to deploy the python program in a lambda u
 - Create an IAM user with permissions to access the ECR, this permissions are needed to allow github actions pussh the image to the ECR
 
 - create the following variables in the repository secrets for actions, this is the information of the access key from the user that can access to ECR:
-	AWS_ACCESS_KEY_ID
-	AWS_SECRET_ACCESS_KEY
-	AWS_DEFAULT_REGION
+
+      AWS_ACCESS_KEY_ID
+      AWS_SECRET_ACCESS_KEY
+      AWS_DEFAULT_REGION
 
 - With the user that have permissions for SES fill the following enviroment variables in the  terraform.tf file in the terraform folder:
+
       AWS_SES_USER_ACCESS_KEY_ID = "value"
       AWS_SES_USER_SECRET_ACCESS_KEY = "value"
       AWS_SES_REGION = "us-east-1"
       RECIPIENT_EMAIL_ADDRESS = "email@email.com"
       SENDER_EMAIL_ADDRESS = "email2@email.com"
 
-- Now with open a console in the Terraform folder and run the following commands
-    terraform init
-    terraform plan -target="aws_ecr_repository.stori_challenge"
-    terraform apply -target="aws_ecr_repository.stori_challenge"
+- Now with open a console in the Terraform folder and run the following commands:
 
-  Tthis will create the ecr repository.
+      terraform init
+      terraform plan -target="aws_ecr_repository.stori_challenge"
+      terraform apply -target="aws_ecr_repository.stori_challenge"
+
+  This will create the ecr repository.
 
 - Run the Github action to compile and push the image to ECR,the github action have a second step that deploy the image to the lambda, this will fails, that's normal since the lambda doesn't exist yet.
 
 - Now that you have the image in the ECR, run the following commands in the console to theploye the rest of the infrastructure:
-    terraform init
-    terraform plan 
-    terraform apply
+
+      terraform init
+      terraform plan 
+      terraform apply
 
 now you have the database, and the lambda created, you can go to the lambda section in the AWS console and test it there, but the connection with the database will timeout after 10 seconds.
