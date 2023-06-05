@@ -191,5 +191,3 @@ terraform.rc
 
 # Local .terraform directories
 **/.terraform/*
-terraform/terraform.tfstate.backup
-terraform/terraform.tfstate

@@ -1,0 +1,36 @@
+version: '3.8'
+name: stori-challenge
+services:
+  postgres:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: your_password
+      POSTGRES_DB: Account
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  python-app:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    restart: always
+    depends_on:
+      - postgres
+    environment:
+      DB_USER: postgres
+      DB_PASSWORD: your_password
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: Account
+      AWS_ACCESS_KEY_ID: value
+      AWS_SECRET_ACCESS_KEY: value
+      AWS_SES_REGION: us-east-1 
+      RECIPIENT_EMAIL_ADDRESS: receiver
+      SENDER_EMAIL_ADDRESS: sender
+    volumes:
+      - "C:\\data:/app/data"  # Mount your data folder to the app container
+
+volumes:
+  postgres_data:

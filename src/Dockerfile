@@ -4,6 +4,9 @@ FROM python:3.9
 # Set the working directory in the container
 WORKDIR /app
 
+# Specify the volume to mount the data folder
+VOLUME /app/data
+
 # Set environment variables
 ENV AWS_ACCESS_KEY_ID=value1 \
     AWS_SECRET_ACCESS_KEY=value2 \
@@ -14,7 +17,8 @@ ENV AWS_ACCESS_KEY_ID=value1 \
     DB_PASSWORD=value2 \
     DB_HOST=value2 \
     DB_PORT=value2 \
-    DB_NAME=value2 
+    DB_NAME=value2 \
+    PYTHONUNBUFFERED=1
 
 # upgrade pip
 RUN  pip install --upgrade pip
@@ -27,4 +31,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Set the command to run your Python application
-CMD [ "python", "lambda_function.py" ]
+CMD ["python", "lambda_function.py" ]
