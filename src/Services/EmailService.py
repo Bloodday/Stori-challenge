@@ -2,8 +2,8 @@ import boto3
 from botocore.exceptions import ClientError
 import os
 
-aws_access_key_id = os.environ['AWS_ACCESS_KEY_ID']
-aws_secret_access_key = os.environ['AWS_SECRET_ACCESS_KEY']
+aws_access_key_id = os.environ['AWS_SES_USER_ACCESS_KEY_ID']
+aws_secret_access_key = os.environ['AWS_SES_USER_SECRET_ACCESS_KEY']
 aws_ses_region = os.environ['AWS_SES_REGION'] # Update with your desired region
 
 ses_client = boto3.client('ses', region_name=aws_ses_region, aws_access_key_id=aws_access_key_id,

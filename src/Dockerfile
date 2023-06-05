@@ -1,8 +1,11 @@
 # Use an official Python runtime as the base image
-FROM python:3.9
+FROM public.ecr.aws/lambda/python:3.9
 
 # Set the working directory in the container
 WORKDIR /app
+
+# Specify the volume to mount the data folder
+VOLUME /app/data
 
 # Set environment variables
 ENV AWS_ACCESS_KEY_ID=value1 \
@@ -14,7 +17,7 @@ ENV AWS_ACCESS_KEY_ID=value1 \
     DB_PASSWORD=value2 \
     DB_HOST=value2 \
     DB_PORT=value2 \
-    DB_NAME=value2 
+    DB_NAME=value2  
 
 # upgrade pip
 RUN  pip install --upgrade pip
@@ -24,7 +27,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the Python code into the container
-COPY . .
+COPY . ${LAMBDA_TASK_ROOT}
 
 # Set the command to run your Python application
-CMD [ "python", "lambda_function.py" ]
+CMD ["lambda_function.lambda_handler" ]
